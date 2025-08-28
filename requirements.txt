@@ -1,0 +1,25 @@
+# Goliath Systems - Python Dependencies
+# Core dependencies for threat detection
+
+# Testing framework
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Data processing and analysis
+numpy>=1.24.0
+pandas>=2.0.0
+
+# ClickHouse client (optional, for direct database integration)
+clickhouse-connect>=0.6.0
+
+# HTTP client for API calls (optional)
+requests>=2.31.0
+
+# Logging and configuration
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# Development tools
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0

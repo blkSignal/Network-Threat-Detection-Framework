@@ -1,0 +1,90 @@
+# Goliath Systems - Git Ignore File
+
+# PCAP files (network captures may contain sensitive data)
+data/pcaps/*.pcap
+data/pcaps/*.pcapng
+data/pcaps/*.pcap.gz
+
+# Log files
+data/zeek/*.log
+data/suricata/*.log
+*.log
+
+# Database files
+data/clickhouse/
+*.db
+*.sqlite
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Configuration files with secrets
+.env.local
+.env.production
+config/secrets.yaml
+config/secrets.yml
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
