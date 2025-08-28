@@ -1,0 +1,232 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Goliath Systems - Network Threat Detection",
+    "tags": ["security", "nids", "threat-detection"],
+    "style": "dark",
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "DGA Detection Results",
+        "type": "table",
+        "targets": [
+          {
+            "query": "SELECT query, count() as count, avg(score) as avg_score FROM top_dga_domains GROUP BY query, count, avg_score ORDER BY count DESC LIMIT 10",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "auto",
+              "displayMode": "auto"
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Beacon Detection Candidates",
+        "type": "table",
+        "targets": [
+          {
+            "query": "SELECT source_ip, destination_ip, score, details FROM beacon_candidates ORDER BY score DESC LIMIT 10",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "auto",
+              "displayMode": "auto"
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Threat Detection Timeline",
+        "type": "timeseries",
+        "targets": [
+          {
+            "query": "SELECT ts, count() as count FROM detector_results WHERE detector_type = 'dga' GROUP BY ts ORDER BY ts",
+            "refId": "A"
+          },
+          {
+            "query": "SELECT ts, count() as count FROM detector_results WHERE detector_type = 'beacon' GROUP BY ts ORDER BY ts",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                }
+              ]
+            },
+            "unit": "short"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Suricata Alerts by Severity",
+        "type": "piechart",
+        "targets": [
+          {
+            "query": "SELECT alert_severity, count() as count FROM suricata_events WHERE event_type = 'alert' GROUP BY alert_severity ORDER BY count DESC",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              }
+            },
+            "mappings": []
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 5,
+        "title": "Top Source IPs",
+        "type": "stat",
+        "targets": [
+          {
+            "query": "SELECT source_ip, count() as count FROM detector_results GROUP BY source_ip ORDER BY count DESC LIMIT 5",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      },
+      {
+        "id": 6,
+        "title": "Detection Score Distribution",
+        "type": "histogram",
+        "targets": [
+          {
+            "query": "SELECT score FROM detector_results WHERE detector_type = 'dga'",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              }
+            },
+            "mappings": []
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        }
+      }
+    ],
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "refresh": "5s"
+  }
+}
