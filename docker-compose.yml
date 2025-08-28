@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: goliath-clickhouse
+    ports:
+      - "8123:8123"  # HTTP
+      - "9000:9000"  # Native
+    environment:
+      - CLICKHOUSE_DB=goliath
+      - CLICKHOUSE_USER=goliath
+      - CLICKHOUSE_PASSWORD=goliath123
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./scripts/init-clickhouse.sql:/docker-entrypoint-initdb.d/init-clickhouse.sql
+    networks:
+      - goliath-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: goliath-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=goliath123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./dashboards/grafana:/etc/grafana/provisioning/dashboards
+      - ./dashboards/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - goliath-network
+    depends_on:
+      - clickhouse
+
+  zeek:
+    image: zeek/zeek:latest
+    container_name: goliath-zeek
+    volumes:
+      - ./zeek/policy:/usr/local/zeek/share/zeek/site
+      - ./data/pcaps:/pcaps
+      - ./data/zeek:/logs
+    working_dir: /pcaps
+    command: ["tail", "-f", "/dev/null"]  # Keep container running
+    networks:
+      - goliath-network
+
+  suricata:
+    image: jasonish/suricata:latest
+    container_name: goliath-suricata
+    volumes:
+      - ./rules/suricata:/etc/suricata/rules
+      - ./data/pcaps:/pcaps
+      - ./data/suricata:/var/log/suricata
+    working_dir: /pcaps
+    command: ["tail", "-f", "/dev/null"]  # Keep container running
+    networks:
+      - goliath-network
+
+volumes:
+  clickhouse_data:
+  grafana_data:
+
+networks:
+  goliath-network:
+    driver: bridge
