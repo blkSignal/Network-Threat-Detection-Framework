@@ -1,0 +1,25 @@
+# Goliath Systems - Custom Suricata Rules
+# These rules provide signature-based detection to complement behavioral analysis
+
+# Suspicious DNS queries
+alert dns $HOME_NET any -> any any (msg:"Suspicious DNS Query - High Entropy Domain"; dns.query; content:"|01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f|"; sid:1000001; rev:1;)
+
+# Potential data exfiltration
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"Potential Data Exfiltration - Large Upload"; flow:established; dsize:>1048576; sid:1000002; rev:1;)
+
+# Suspicious HTTP User-Agents
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"Suspicious HTTP User-Agent"; http.user_agent; content:"python-requests"; sid:1000003; rev:1;)
+alert http $HOME_NET any -> $EXTERNAL_NET any (msg:"Suspicious HTTP User-Agent"; http.user_agent; content:"curl"; sid:1000004; rev:1;)
+
+# Encrypted traffic to suspicious destinations
+alert tcp $HOME_NET any -> $EXTERNAL_NET 443 (msg:"Encrypted Traffic to Suspicious IP"; flow:established; sid:1000005; rev:1;)
+
+# Beaconing detection (multiple connections to same destination)
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"Potential Beaconing - Multiple Connections"; flow:established; threshold:type threshold, track by_src, count 5, seconds 300; sid:1000006; rev:1;)
+
+# Suspicious file downloads
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious File Download"; http.content_type; content:"application/octet-stream"; sid:1000007; rev:1;)
+alert http $EXTERNAL_NET any -> $HOME_NET any (msg:"Suspicious File Download"; http.content_type; content:"application/x-executable"; sid:1000008; rev:1;)
+
+# Command and Control indicators
+alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"Potential C2 Communication"; flow:established; sid:1000009; rev:1;)
