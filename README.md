@@ -2,8 +2,6 @@
 
 **Intent**: Goliath Systems proves you can design, deploy, and analyze a modern network-threat detection pipeline that still works when payloads are encrypted.
 
-## What it shows employers
-
 - **Real NIDS ops**: Suricata + Zeek, custom rules, log handling
 - **Data plumbing**: logs → ClickHouse → Grafana dashboards  
 - **Detection engineering**: behavioral analytics (DGA/exfil, beaconing) on Zeek logs
