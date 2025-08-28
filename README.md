@@ -1,6 +1,6 @@
 # Goliath Systems
 
-**One-line purpose**: Goliath Systems proves you can design, deploy, and analyze a modern network-threat detection pipeline that still works when payloads are encrypted.
+**Intent**: Goliath Systems proves you can design, deploy, and analyze a modern network-threat detection pipeline that still works when payloads are encrypted.
 
 ## What it shows employers
 
@@ -66,10 +66,6 @@ python detectors/python/beacon_detector.py --zeek conn.log
 - [ ] Grafana shows panels for top entropy domains & Suricata alerts
 - [ ] pytest passes
 - [ ] Fresh clone → docker compose up -d works end-to-end
-
-## Interview Talk Track
-
-> "Goliath Systems is a minimal network-threat detection lab for encrypted traffic. Pipeline: Zeek/Suricata → ClickHouse → Grafana; detectors are explainable and unit-tested. I demo DGA/exfil via entropy scoring and beaconing via periodicity; Suricata rules add signature coverage. It's dockerized and reproducible — a small version of how I'd stand up detections in prod."
 
 ## License
 
