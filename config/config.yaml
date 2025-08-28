@@ -1,0 +1,143 @@
+# Goliath Systems Configuration
+# Network Threat Detection Pipeline Configuration
+
+# Database Configuration
+database:
+  clickhouse:
+    host: "localhost"
+    port: 8123
+    database: "goliath"
+    username: "goliath"
+    password: "goliath123"
+    timeout: 30
+    max_connections: 100
+    compression: true
+
+# Detection Engine Configuration
+detection:
+  dga:
+    enabled: true
+    threshold: 0.6
+    weights:
+      entropy: 0.3
+      length: 0.2
+      digits: 0.2
+      consonants: 0.15
+      base64: 0.15
+    suspicious_tlds:
+      - ".xyz"
+      - ".top"
+      - ".club"
+      - ".online"
+      - ".site"
+      - ".tech"
+  
+  beacon:
+    enabled: true
+    threshold: 0.7
+    min_connections: 5
+    window_size: 100
+    weights:
+      periodicity: 0.4
+      variance: 0.3
+      entropy: 0.3
+
+# Machine Learning Configuration
+ml:
+  enabled: true
+  models_path: "models/"
+  anomaly_detection:
+    contamination: 0.1
+    n_estimators: 100
+    random_state: 42
+  classification:
+    n_estimators: 100
+    test_size: 0.2
+    random_state: 42
+
+# Performance Configuration
+performance:
+  batch_size: 1000
+  max_workers: null  # Auto-detect
+  memory_threshold: 85
+  cpu_threshold: 80
+  disk_threshold: 90
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/goliath.log"
+  max_size: "100MB"
+  backup_count: 5
+
+# Alerting Configuration
+alerts:
+  email:
+    enabled: false
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    username: ""
+    password: ""
+    recipients: []
+  
+  slack:
+    enabled: false
+    webhook_url: ""
+    channel: "#security-alerts"
+  
+  thresholds:
+    high_risk: 0.8
+    medium_risk: 0.6
+    low_risk: 0.4
+
+# Network Configuration
+network:
+  home_net: "192.168.0.0/16"
+  external_net: "!192.168.0.0/16"
+  dns_servers:
+    - "8.8.8.8"
+    - "1.1.1.1"
+  suspicious_ports:
+    - 22
+    - 23
+    - 3389
+    - 5900
+
+# Retention Policy
+retention:
+  logs: 90  # days
+  alerts: 365  # days
+  models: 730  # days
+  backups: 30  # days
+
+# Security Configuration
+security:
+  encryption:
+    enabled: true
+    algorithm: "AES-256"
+    key_rotation: 30  # days
+  
+  authentication:
+    enabled: true
+    method: "jwt"
+    token_expiry: 24  # hours
+  
+  access_control:
+    admin_users: []
+    read_users: []
+    write_users: []
+
+# Monitoring Configuration
+monitoring:
+  health_check_interval: 60  # seconds
+  metrics_collection: true
+  dashboard_refresh: 5  # seconds
+  alert_cooldown: 300  # seconds
+
+# Development Configuration
+development:
+  debug_mode: false
+  hot_reload: false
+  test_data: true
+  mock_services: false

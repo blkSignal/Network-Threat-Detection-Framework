@@ -1,0 +1,300 @@
+name: Goliath Systems CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+env:
+  PYTHON_VERSION: '3.9'
+  DOCKER_IMAGE: goliath-systems
+  DOCKER_TAG: latest
+
+jobs:
+  # Code Quality and Testing
+  quality:
+    name: Code Quality & Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install black flake8 mypy pytest pytest-cov
+        
+    - name: Code formatting check
+      run: |
+        black --check --diff detectors/ tests/ api/
+        
+    - name: Linting
+      run: |
+        flake8 detectors/ tests/ api/ --max-line-length=100 --ignore=E501,W503
+        
+    - name: Type checking
+      run: |
+        mypy detectors/ --ignore-missing-imports
+        
+    - name: Run tests with coverage
+      run: |
+        pytest tests/ -v --cov=detectors --cov-report=xml --cov-report=html
+        
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  # Security Scanning
+  security:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Run Bandit security scan
+      run: |
+        pip install bandit
+        bandit -r detectors/ -f json -o bandit-report.json || true
+        
+    - name: Run Safety check
+      run: |
+        pip install safety
+        safety check --json --output safety-report.json || true
+        
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+
+  # Docker Build and Test
+  docker:
+    name: Docker Build & Test
+    runs-on: ubuntu-latest
+    needs: quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} .
+        
+    - name: Test Docker image
+      run: |
+        docker run --rm ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} python -m pytest tests/ -v
+
+  # Integration Testing
+  integration:
+    name: Integration Testing
+    runs-on: ubuntu-latest
+    needs: [quality, docker]
+    
+    services:
+      clickhouse:
+        image: clickhouse/clickhouse-server:latest
+        env:
+          CLICKHOUSE_DB: goliath_test
+          CLICKHOUSE_USER: goliath
+          CLICKHOUSE_PASSWORD: goliath123
+        ports:
+          - 8123:8123
+        options: >-
+          --health-cmd "wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 3
+          
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Wait for ClickHouse
+      run: |
+        timeout 60 bash -c 'until curl -s http://localhost:8123/ping; do sleep 2; done'
+        
+    - name: Run integration tests
+      run: |
+        python -m pytest tests/ -v -m "integration" --tb=short
+
+  # Performance Testing
+  performance:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    needs: quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install locust
+        
+    - name: Run performance tests
+      run: |
+        python -m pytest tests/ -v -m "performance" --tb=short
+        
+    - name: Generate performance report
+      run: |
+        python -c "
+        import time
+        from detectors.python.performance_optimizer import PerformanceOptimizer
+        opt = PerformanceOptimizer()
+        metrics = opt.get_system_metrics()
+        print(f'Performance Metrics: {metrics}')
+        "
+
+  # Deployment (on release)
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [quality, security, docker, integration, performance]
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Deploy to production
+      run: |
+        echo "Deploying Goliath Systems to production..."
+        # Add your deployment commands here
+        # Example: kubectl apply, docker push, etc.
+        
+    - name: Notify deployment
+      run: |
+        echo "Goliath Systems successfully deployed to production!"
+        
+  # Documentation Generation
+  docs:
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+    needs: quality
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install documentation tools
+      run: |
+        pip install sphinx sphinx-rtd-theme
+        
+    - name: Generate API documentation
+      run: |
+        cd api
+        python -c "
+        import uvicorn
+        from server import app
+        # Generate OpenAPI spec
+        with open('openapi.json', 'w') as f:
+            import json
+            json.dump(app.openapi(), f, indent=2)
+        "
+        
+    - name: Upload documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: documentation
+        path: |
+          api/openapi.json
+          docs/
+
+  # Release Management
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [quality, security, docker, integration, performance, docs]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        body: |
+          ## What's Changed
+          
+          ### 🚀 New Features
+          - Enhanced threat detection algorithms
+          - Machine learning integration
+          - Performance optimization
+          - REST API endpoints
+          
+          ### 🔧 Improvements
+          - Code quality improvements
+          - Enhanced testing coverage
+          - Better error handling
+          
+          ### 🐛 Bug Fixes
+          - Various bug fixes and improvements
+          
+          ### 📚 Documentation
+          - Updated API documentation
+          - Enhanced architecture docs
+          
+          ## Installation
+          
+          ```bash
+          git clone https://github.com/blkSignal/Goliath-Systems.git
+          cd Goliath-Systems
+          docker compose up -d
+          ```
+          
+          ## Testing
+          
+          ```bash
+          python -m pytest tests/ -v
+          ```
+          
+        draft: false
+        prerelease: false
