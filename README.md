@@ -1,6 +1,6 @@
 # Network-Threat-Detection-Framework
 
-**Intent**: Goliath Systems proves you can design, deploy, and analyze a modern network-threat detection pipeline that still works when payloads are encrypted.
+**Intent**: you can design, deploy, and analyze a modern network-threat detection pipeline that still works when payloads are encrypted.
 
 - **Real NIDS ops**: Suricata + Zeek, custom rules, log handling
 - **Data plumbing**: logs → ClickHouse → Grafana dashboards  
