@@ -1,4 +1,4 @@
-# Goliath Systems
+# Network-Threat-Detection-Framework
 
 **Intent**: Goliath Systems proves you can design, deploy, and analyze a modern network-threat detection pipeline that still works when payloads are encrypted.
 
